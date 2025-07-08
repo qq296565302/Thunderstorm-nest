@@ -215,49 +215,6 @@ export class WebSocketService {
   }
 
   /**
-   * 调试方法：发送测试消息并返回详细信息
-   * @param event 事件名称
-   * @param data 消息数据
-   * @returns 调试信息
-   */
-  debugBroadcast(event: string, data: any): any {
-    const debugInfo = {
-      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
-      gatewayAvailable: !!this.gateway,
-      serverAvailable: !!this.gateway?.server,
-      connectedClients: this.getConnectedClientsCount(),
-      clientIds: this.getConnectedClientIds(),
-      event,
-      data,
-      result: null as any
-    };
-
-    if (!this.gateway) {
-      debugInfo.result = { success: false, error: 'Gateway not initialized' };
-      return debugInfo;
-    }
-
-    if (!this.gateway.server) {
-      debugInfo.result = { success: false, error: 'Server not available' };
-      return debugInfo;
-    }
-
-    if (debugInfo.connectedClients === 0) {
-      debugInfo.result = { success: false, error: 'No connected clients' };
-      return debugInfo;
-    }
-
-    try {
-      const sentCount = this.broadcastToAll(event, data);
-      debugInfo.result = { success: true, sentToClients: sentCount };
-    } catch (error) {
-      debugInfo.result = { success: false, error: error.message };
-    }
-
-    return debugInfo;
-  }
-
-  /**
    * 强制向所有客户端发送心跳消息
    * @returns 发送结果
    */

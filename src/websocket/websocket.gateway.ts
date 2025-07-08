@@ -20,8 +20,13 @@ import { Injectable, Logger } from '@nestjs/common';
     origin: '*',
     methods: ['GET', 'POST'],
     credentials: true,
+    allowedHeaders: ['*'],
   },
   namespace: '/',
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
 })
 export class NewsWebSocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -42,7 +47,7 @@ export class NewsWebSocketGateway implements OnGatewayConnection, OnGatewayDisco
     client.emit('connected', {
       message: '连接成功',
       clientId: client.id,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     });
   }
 
@@ -68,7 +73,7 @@ export class NewsWebSocketGateway implements OnGatewayConnection, OnGatewayDisco
     client.emit('messageReceived', {
       message: '消息已收到',
       originalMessage: body,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     });
     
     return body;
@@ -89,7 +94,7 @@ export class NewsWebSocketGateway implements OnGatewayConnection, OnGatewayDisco
     client.emit('subscriptionConfirmed', {
       message: '新闻订阅成功',
       subscription: body,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     });
   }
 
@@ -107,7 +112,7 @@ export class NewsWebSocketGateway implements OnGatewayConnection, OnGatewayDisco
     
     client.emit('unsubscriptionConfirmed', {
       message: '取消新闻订阅成功',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     });
   }
 

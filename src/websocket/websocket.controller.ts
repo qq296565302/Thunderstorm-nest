@@ -45,7 +45,7 @@ export class WebSocketController {
     return {
       success: true,
       message: '消息已广播到所有客户端',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     };
   }
 
@@ -73,7 +73,7 @@ export class WebSocketController {
     return {
       success: true,
       message: `消息已发送到房间: ${room}`,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     };
   }
 
@@ -101,7 +101,7 @@ export class WebSocketController {
     return {
       success: true,
       message: `消息已发送到客户端: ${clientId}`,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     };
   }
 
@@ -130,7 +130,7 @@ export class WebSocketController {
     return {
       success: true,
       message: '新闻已推送到订阅客户端',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     };
   }
 
@@ -159,7 +159,7 @@ export class WebSocketController {
     return {
       success: true,
       message: '财经数据已推送',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     };
   }
 
@@ -195,7 +195,7 @@ export class WebSocketController {
     return {
       success: true,
       message: '系统通知已发送',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     };
   }
 }

@@ -38,7 +38,7 @@ export class WebSocketExampleService {
       content: newsData.content,
       category: newsData.category || '综合',
       source: newsData.source || '雷雨新闻',
-      publishTime: new Date().toISOString(),
+      publishTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
       imageUrl: newsData.imageUrl,
       tags: newsData.tags || [],
     };
@@ -59,7 +59,7 @@ export class WebSocketExampleService {
       changePercent: stockData.changePercent,
       volume: stockData.volume,
       marketCap: stockData.marketCap,
-      updateTime: new Date().toISOString(),
+      updateTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     };
 
     this.webSocketService.pushFinanceData(formattedStock);

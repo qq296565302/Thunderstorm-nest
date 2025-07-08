@@ -52,19 +52,31 @@ export class WebSocketService {
    * 向所有连接的客户端广播消息
    * @param event 事件名称
    * @param data 消息数据
+   * @returns 发送的客户端数量
    */
-  broadcastToAll(event: string, data: any): void {
+  broadcastToAll(event: string, data: any): number {
     if (!this.gateway?.server) {
       this.logger.warn('WebSocket服务器未初始化，无法发送广播消息');
-      return;
+      return 0;
     }
 
-    this.gateway.server.emit(event, {
+    const connectedCount = this.getConnectedClientsCount();
+    if (connectedCount === 0) {
+      this.logger.warn(`没有连接的客户端，无法广播消息: ${event}`);
+      return 0;
+    }
+
+    const messageData = {
       ...data,
-      timestamp: new Date().toISOString(),
-    });
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
+    };
+
+    // 使用 sockets.emit 确保发送到所有连接的客户端
+    this.gateway.server.emit(event, messageData);
     
-    this.logger.log(`广播消息到所有客户端: ${event}`, data);
+    this.logger.log(`广播消息到 ${connectedCount} 个客户端: ${event}`);
+    
+    return connectedCount;
   }
 
   /**
@@ -81,7 +93,7 @@ export class WebSocketService {
 
     this.gateway.server.to(room).emit(event, {
       ...data,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     });
     
     this.logger.log(`发送消息到房间 ${room}: ${event}`, data);
@@ -92,19 +104,34 @@ export class WebSocketService {
    * @param clientId 客户端ID
    * @param event 事件名称
    * @param data 消息数据
+   * @returns 是否发送成功
    */
-  sendToClient(clientId: string, event: string, data: any): void {
+  sendToClient(clientId: string, event: string, data: any): boolean {
     if (!this.gateway?.server) {
       this.logger.warn('WebSocket服务器未初始化，无法发送客户端消息');
-      return;
+      return false;
     }
 
-    this.gateway.server.to(clientId).emit(event, {
+    const clientIds = this.getConnectedClientIds();
+    if (!clientIds.includes(clientId)) {
+      this.logger.warn(`客户端 ${clientId} 未连接，无法发送消息`);
+      return false;
+    }
+
+    const messageData = {
       ...data,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
+    };
+
+    this.gateway.server.to(clientId).emit(event, messageData);
+    
+    this.logger.log(`发送消息到客户端 ${clientId}: ${event}`, {
+      event,
+      clientId,
+      messageData
     });
     
-    this.logger.log(`发送消息到客户端 ${clientId}: ${event}`, data);
+    return true;
   }
 
   /**
@@ -183,7 +210,61 @@ export class WebSocketService {
       isAvailable: this.isAvailable(),
       connectedClients: this.getConnectedClientsCount(),
       clientIds: this.getConnectedClientIds(),
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     };
+  }
+
+  /**
+   * 调试方法：发送测试消息并返回详细信息
+   * @param event 事件名称
+   * @param data 消息数据
+   * @returns 调试信息
+   */
+  debugBroadcast(event: string, data: any): any {
+    const debugInfo = {
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
+      gatewayAvailable: !!this.gateway,
+      serverAvailable: !!this.gateway?.server,
+      connectedClients: this.getConnectedClientsCount(),
+      clientIds: this.getConnectedClientIds(),
+      event,
+      data,
+      result: null as any
+    };
+
+    if (!this.gateway) {
+      debugInfo.result = { success: false, error: 'Gateway not initialized' };
+      return debugInfo;
+    }
+
+    if (!this.gateway.server) {
+      debugInfo.result = { success: false, error: 'Server not available' };
+      return debugInfo;
+    }
+
+    if (debugInfo.connectedClients === 0) {
+      debugInfo.result = { success: false, error: 'No connected clients' };
+      return debugInfo;
+    }
+
+    try {
+      const sentCount = this.broadcastToAll(event, data);
+      debugInfo.result = { success: true, sentToClients: sentCount };
+    } catch (error) {
+      debugInfo.result = { success: false, error: error.message };
+    }
+
+    return debugInfo;
+  }
+
+  /**
+   * 强制向所有客户端发送心跳消息
+   * @returns 发送结果
+   */
+  sendHeartbeat(): number {
+    return this.broadcastToAll('heartbeat', {
+      message: 'Server heartbeat',
+      serverTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00')
+    });
   }
 }

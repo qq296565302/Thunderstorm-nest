@@ -89,27 +89,23 @@ export class DatabaseService {
   }
 
   /**
-   * 更新或插入财经数据
+   * 插入财经数据（仅新增，不更新）
    */
   async upsertFinanceData(financeData: Partial<Finance>): Promise<Finance> {
     try {
-      const filter = financeData.symbol ? { symbol: financeData.symbol } : {};
-      return await this.financeModel.findOneAndUpdate(
-        filter,
-        financeData,
-        { upsert: true, new: true }
-      ) as Finance;
+      const finance = new this.financeModel(financeData);
+      return await finance.save();
     } catch (error) {
-      this.logger.error('更新财经数据失败', error);
+      this.logger.error('插入财经数据失败', error);
       throw error;
     }
   }
 
   /**
-   * 根据股票代码获取财经数据
+   * 根据财经信息ID获取财经数据
    */
-  async getFinanceBySymbol(symbol: string): Promise<Finance | null> {
-    return await this.financeModel.findOne({ symbol }).exec();
+  async getFinanceById(id: string): Promise<Finance | null> {
+    return await this.financeModel.findOne({ id }).exec();
   }
 
   /**
@@ -117,10 +113,29 @@ export class DatabaseService {
    */
   async getAllFinanceData(limit: number = 50): Promise<Finance[]> {
     return await this.financeModel
-      .find()
-      .sort({ lastUpdate: -1 })
+      .find({ isPublished: true })
+      .sort({ publishTime: -1 })
       .limit(limit)
       .exec();
+  }
+
+  /**
+   * 检查财经数据是否已存在
+   * 根据publishTime、author和content三个字段进行判断
+   */
+  async checkFinanceDataExists(publishTime: string, author: string, content: string): Promise<boolean> {
+    try {
+      const existingData = await this.financeModel.findOne({
+        publishTime,
+        author,
+        content
+      }).exec();
+      
+      return !!existingData;
+    } catch (error) {
+      this.logger.error('检查财经数据是否存在失败', error);
+      return false;
+    }
   }
 
   // ==================== 用户相关操作 ====================
@@ -222,11 +237,11 @@ export class DatabaseService {
    */
   async getFinanceStats() {
     const total = await this.financeModel.countDocuments();
-    const stocks = await this.financeModel.countDocuments({ type: 'stock' });
-    const forex = await this.financeModel.countDocuments({ type: 'forex' });
-    const crypto = await this.financeModel.countDocuments({ type: 'crypto' });
+    const published = await this.financeModel.countDocuments({ isPublished: true });
+    const draft = await this.financeModel.countDocuments({ isPublished: false });
+    const topNews = await this.financeModel.countDocuments({ isTop: true });
     
-    return { total, stocks, forex, crypto };
+    return { total, published, draft, topNews };
   }
 
   // ==================== 通用操作 ====================

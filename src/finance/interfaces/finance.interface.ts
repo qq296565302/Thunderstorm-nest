@@ -13,7 +13,7 @@ export interface FinanceNews {
   content: string;
 
   /** 财经分类 */
-  category: string;
+  category?: string;
 
   /** 发布时间 */
   publishTime: Date;

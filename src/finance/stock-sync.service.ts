@@ -53,11 +53,25 @@ export class StockSyncService {
         try {
           const formattedStock = this.formatStockData(stock);
           if (formattedStock) {
-            await this.databaseService.upsertFinanceData(formattedStock);
-            successCount++;
+            // 检查数据是否已存在（根据publishTime、author和content三重判断）
+            const exists = await this.databaseService.checkFinanceDataExists(
+              formattedStock.publishTime,
+              formattedStock.author,
+              formattedStock.content
+            );
+            
+            if (!exists) {
+              // 数据不存在，插入新数据
+              await this.databaseService.upsertFinanceData(formattedStock);
+              successCount++;
+              this.logger.debug(`新增财经数据: ${formattedStock.title}`);
+            } else {
+              // 数据已存在，跳过
+              this.logger.debug(`数据已存在，跳过: ${formattedStock.title}`);
+            }
           }
         } catch (error) {
-          this.logger.warn(`保存股票数据失败: ${stock.stock_code || stock.symbol}`, error.message);
+          this.logger.warn(`保存股票数据失败: ${stock['标题'] || stock.id || 'Unknown'}`, error.message);
         }
       }
 
@@ -83,9 +97,9 @@ export class StockSyncService {
   }
 
   /**
-   * 定时同步股票数据 - 每10分钟执行一次
+   * 定时同步股票数据 - 每1分钟执行一次
    */
-  @Cron('0 */10 * * * *')
+  @Cron('0 */1 * * * *')
   async scheduledSync(): Promise<void> {
     this.logger.log('定时任务：开始同步股票数据');
     await this.syncStockData();
@@ -100,40 +114,42 @@ export class StockSyncService {
     try {
       if (!rawData) return null;
 
-      // 获取股票代码
-      const symbol = rawData.stock_code || rawData.symbol || rawData.code;
-      if (!symbol) {
-        this.logger.warn('股票数据缺少代码字段', rawData);
-        return null;
-      }
-
-      // 获取价格
-      const price = this.parseNumber(rawData.current_price || rawData.price || rawData.last_price);
-      if (!price || price <= 0) {
-        this.logger.warn(`股票 ${symbol} 价格数据无效`, rawData);
-        return null;
-      }
-
       return {
-        symbol: symbol.toString().trim(),
-        name: rawData.stock_name || rawData.name || symbol,
-        price: price,
-        change: this.parseNumber(rawData.price_change || rawData.change) || 0,
-        changePercent: this.parseNumber(rawData.change_percent || rawData.change_pct) || 0,
-        volume: this.parseNumber(rawData.volume || rawData.trade_volume) || 0,
-        marketCap: this.parseNumber(rawData.market_cap || rawData.market_value) || 0,
-        high: this.parseNumber(rawData.high || rawData.day_high) || price,
-        low: this.parseNumber(rawData.low || rawData.day_low) || price,
-        open: this.parseNumber(rawData.open || rawData.open_price) || price,
-        close: this.parseNumber(rawData.close || rawData.close_price) || price,
-        lastUpdate: new Date(),
-        market: rawData.market || rawData.exchange || 'UNKNOWN',
-        currency: rawData.currency || 'CNY',
-        source: 'stock-api'
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 10),
+        title:rawData['标题'] || '--',
+        content:rawData['内容'],
+        publishTime: this.formatDateTime(rawData['发布日期'], rawData['发布时间']),
+        author:'财联社',
+        tags:[]
       };
     } catch (error) {
       this.logger.error('格式化股票数据失败', error, rawData);
       return null;
+    }
+  }
+
+  /**
+   * 格式化日期时间
+   * @param dateStr 发布日期，格式如"2025-07-10T00:00:00.000"
+   * @param timeStr 发布时间，格式如"10:02:29"
+   * @returns 格式化后的日期时间字符串，格式如"2025-07-10 10:02:29"
+   */
+  private formatDateTime(dateStr: string, timeStr: string): string {
+    try {
+      if (!dateStr || !timeStr) {
+        return new Date().toISOString().replace('T', ' ').substring(0, 19);
+      }
+
+      // 从ISO格式日期中提取日期部分
+      const datePart = dateStr.split('T')[0]; // "2025-07-10"
+      
+      // 组合日期和时间
+      const formattedDateTime = `${datePart} ${timeStr}`; // "2025-07-10 10:02:29"
+      
+      return formattedDateTime;
+    } catch (error) {
+      this.logger.warn('日期时间格式化失败，使用当前时间', error);
+      return new Date().toISOString().replace('T', ' ').substring(0, 19);
     }
   }
 

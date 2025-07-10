@@ -15,127 +15,64 @@ export type FinanceDocument = Finance & Document;
 })
 export class Finance {
   /**
-   * 股票代码
+   * 财经信息唯一标识符
    */
-  @Prop({ required: true, trim: true, uppercase: true })
-  symbol: string;
+  @Prop({ required: true, unique: true, index: true })
+  id: string;
 
   /**
-   * 股票名称
+   * 财经标题
    */
   @Prop({ required: true, trim: true })
-  name: string;
+  title: string;
 
   /**
-   * 当前价格
-   */
-  @Prop({ required: true, min: 0 })
-  price: number;
-
-  /**
-   * 涨跌额
+   * 财经内容
    */
   @Prop({ required: true })
-  change: number;
+  content: string;
 
   /**
-   * 涨跌幅百分比
+   * 发布时间
    */
   @Prop({ required: true })
-  changePercent: number;
+  publishTime: string;
 
   /**
-   * 成交量
-   */
-  @Prop({ min: 0 })
-  volume?: number;
-
-  /**
-   * 市值
-   */
-  @Prop({ min: 0 })
-  marketCap?: number;
-
-  /**
-   * 开盘价
-   */
-  @Prop({ min: 0 })
-  openPrice?: number;
-
-  /**
-   * 最高价
-   */
-  @Prop({ min: 0 })
-  highPrice?: number;
-
-  /**
-   * 最低价
-   */
-  @Prop({ min: 0 })
-  lowPrice?: number;
-
-  /**
-   * 昨收价
-   */
-  @Prop({ min: 0 })
-  previousClose?: number;
-
-  /**
-   * 市场类型
-   */
-  @Prop({ 
-    enum: ['stock', 'crypto', 'forex', 'commodity'], 
-    default: 'stock' 
-  })
-  marketType: string;
-
-  /**
-   * 交易所
+   * 图片URL
    */
   @Prop({ trim: true })
-  exchange?: string;
+  imageUrl?: string;
 
   /**
-   * 货币单位
+   * 作者
    */
-  @Prop({ default: 'USD', trim: true, uppercase: true })
-  currency: string;
+  @Prop({ trim: true })
+  author?: string;
+
+  /**
+   * 标签列表
+   */
+  @Prop({ type: [String], default: [] })
+  tags: string[];
+
+  /**
+   * 财经分类
+   */
+  @Prop({ trim: true })
+  category?: string;
+
+  /**
+   * 是否已发布
+   */
+  @Prop({ default: true })
+  isPublished?: boolean;
 
   /**
    * 数据更新时间
    */
   @Prop({ type: Date, default: Date.now })
   updateTime: Date;
-
-  /**
-   * 是否为活跃交易
-   */
-  @Prop({ default: true })
-  isActive: boolean;
-
-  /**
-   * 52周最高价
-   */
-  @Prop({ min: 0 })
-  week52High?: number;
-
-  /**
-   * 52周最低价
-   */
-  @Prop({ min: 0 })
-  week52Low?: number;
-
-  /**
-   * 市盈率
-   */
-  @Prop({ min: 0 })
-  peRatio?: number;
-
-  /**
-   * 股息收益率
-   */
-  @Prop({ min: 0 })
-  dividendYield?: number;
 }
 
 /**
@@ -144,7 +81,12 @@ export class Finance {
 export const FinanceSchema = SchemaFactory.createForClass(Finance);
 
 // 创建索引
-FinanceSchema.index({ symbol: 1 }, { unique: true }); // 股票代码唯一索引
-FinanceSchema.index({ marketType: 1 }); // 市场类型索引
+FinanceSchema.index({ id: 1 }, { unique: true }); // 财经信息ID唯一索引
+FinanceSchema.index({ title: 'text', content: 'text' }); // 全文搜索索引
+FinanceSchema.index({ publishTime: -1 }); // 发布时间索引
+FinanceSchema.index({ category: 1 }); // 分类索引
+FinanceSchema.index({ author: 1 }); // 作者索引
+FinanceSchema.index({ tags: 1 }); // 标签索引
+FinanceSchema.index({ isPublished: 1, publishTime: -1 }); // 已发布文章索引
+FinanceSchema.index({ isTop: -1, publishTime: -1 }); // 置顶文章索引
 FinanceSchema.index({ updateTime: -1 }); // 更新时间索引
-FinanceSchema.index({ isActive: 1, updateTime: -1 }); // 活跃股票索引

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Finance } from './interfaces/finance.interface';
+import { FinanceNews } from './interfaces/finance.interface';
 
 /**
  * 财经服务类
@@ -8,7 +8,7 @@ import { Finance } from './interfaces/finance.interface';
 @Injectable()
 export class FinanceService {
   // 模拟财经数据
-  private readonly mockFinance: Finance[] = [
+  private readonly mockFinance: FinanceNews[] = [
 
   ];
 
@@ -21,7 +21,7 @@ export class FinanceService {
   async getFinanceList(
     page: number,
     limit: number,
-  ): Promise<{ data: Finance[]; total: number; page: number; limit: number }> {
+  ): Promise<{ data: FinanceNews[]; total: number; page: number; limit: number }> {
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const data = this.mockFinance.slice(startIndex, endIndex);
@@ -39,7 +39,7 @@ export class FinanceService {
    * @param id 财经ID
    * @returns 财经详情
    */
-  async getFinanceById(id: string): Promise<Finance> {
+  async getFinanceById(id: string): Promise<FinanceNews> {
     const finance = this.mockFinance.find((item) => item.id === id);
     if (!finance) {
       throw new Error(`财经信息ID ${id} 不存在`);
@@ -58,7 +58,7 @@ export class FinanceService {
     category: string,
     page: number,
     limit: number,
-  ): Promise<{ data: Finance[]; total: number; page: number; limit: number }> {
+  ): Promise<{ data: FinanceNews[]; total: number; page: number; limit: number }> {
     const filteredFinance = this.mockFinance.filter(
       (finance) => finance.category === category,
     );

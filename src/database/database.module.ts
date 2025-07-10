@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Finance, FinanceSchema } from './schemas/finance.schema';
+import { News, NewsSchema } from './schemas/news.schema';
+import { User, UserSchema } from './schemas/user.schema';
 import { DatabaseService } from './database.service';
 
 /**
@@ -23,6 +25,8 @@ import { DatabaseService } from './database.service';
     // 注册数据模型
     MongooseModule.forFeature([
       { name: Finance.name, schema: FinanceSchema },
+      { name: News.name, schema: NewsSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   providers: [DatabaseService],

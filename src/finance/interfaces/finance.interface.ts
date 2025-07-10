@@ -2,7 +2,7 @@
  * 财经数据接口
  * 定义财经对象的数据结构
  */
-export interface Finance {
+export interface FinanceNews {
   /** 财经信息唯一标识符 */
   id: string;
 
@@ -33,7 +33,7 @@ export interface Finance {
  */
 export interface FinanceListResponse {
   /** 财经数据列表 */
-  data: Finance[];
+  data: FinanceNews[];
 
   /** 总数量 */
   total: number;

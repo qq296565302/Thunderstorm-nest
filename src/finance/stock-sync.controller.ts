@@ -19,16 +19,23 @@ export class StockSyncController {
   @ApiResponse({ status: 200, description: '同步成功' })
   @ApiResponse({ status: 500, description: '同步失败' })
   async syncStockData() {
-    return await this.stockSyncService.syncStockData();
-  }
+    const clsResult = await this.stockSyncService.syncStockData(
+      'http://47.94.196.217:5500/api/public/stock_info_global_cls',
+      '财联社'
+    );
+    
+    const sinaResult = await this.stockSyncService.syncStockData(
+      'http://47.94.196.217:5500/api/public/stock_info_global_sina',
+      '新浪财经'
+    );
 
-  /**
-   * 获取同步状态
-   */
-  @Get('status')
-  @ApiOperation({ summary: '获取同步状态' })
-  @ApiResponse({ status: 200, description: '获取状态成功' })
-  async getSyncStatus() {
-    return await this.stockSyncService.getSyncStatus();
+    return {
+      success: clsResult.success && sinaResult.success,
+      results: {
+        cls: clsResult,
+        sina: sinaResult
+      },
+      totalCount: clsResult.count + sinaResult.count
+    };
   }
 }

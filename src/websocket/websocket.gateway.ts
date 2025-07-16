@@ -158,8 +158,7 @@ export class NewsWebSocketGateway
     }
 
     this.logger.log(
-      `客户端 ${client.id} 取消订阅房间 ${roomType}:`,
-      unsubscriptionData,
+      `客户端 ${client.id} 取消订阅房间 ${roomType}:`
     );
 
     // 将客户端从指定房间移除
@@ -181,38 +180,6 @@ export class NewsWebSocketGateway
   }
 
   /**
-   * 处理新闻推送订阅（兼容旧接口）
-   * @param body 订阅信息
-   * @param client 客户端Socket
-   */
-  @SubscribeMessage('subscribeNews')
-  handleNewsSubscription(
-    @MessageBody() body: any,
-    @ConnectedSocket() client: Socket,
-  ) {
-    this.logger.log(`客户端 ${client.id} 使用旧接口订阅新闻:`, body);
-
-    // 调用统一订阅方法
-    this.handleRoomSubscription({ roomType: 'news', ...body }, client);
-  }
-
-  /**
-   * 处理新闻推送取消订阅（兼容旧接口）
-   * @param body 取消订阅信息
-   * @param client 客户端Socket
-   */
-  @SubscribeMessage('unsubscribeNews')
-  handleNewsUnsubscription(
-    @MessageBody() body: any,
-    @ConnectedSocket() client: Socket,
-  ) {
-    this.logger.log(`客户端 ${client.id} 使用旧接口取消订阅新闻:`, body);
-
-    // 调用统一取消订阅方法
-    this.handleRoomUnsubscription({ roomType: 'news', ...body }, client);
-  }
-
-  /**
    * 处理财经数据订阅
    * @param body 订阅信息
    * @param client 客户端Socket
@@ -222,7 +189,7 @@ export class NewsWebSocketGateway
     @MessageBody() body: any,
     @ConnectedSocket() client: Socket,
   ) {
-    this.logger.log(`客户端 ${client.id} 订阅财经数据:`, body);
+    this.logger.log(`客户端 ${client.id} 订阅财经数据:`);
 
     // 调用统一订阅方法
     this.handleRoomSubscription({ roomType: 'finance', ...body }, client);
@@ -238,7 +205,7 @@ export class NewsWebSocketGateway
     @MessageBody() body: any,
     @ConnectedSocket() client: Socket,
   ) {
-    this.logger.log(`客户端 ${client.id} 取消订阅财经数据:`, body);
+    this.logger.log(`客户端 ${client.id} 取消订阅财经数据:`);
 
     // 调用统一取消订阅方法
     this.handleRoomUnsubscription({ roomType: 'finance', ...body }, client);

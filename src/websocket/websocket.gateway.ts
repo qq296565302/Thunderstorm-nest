@@ -28,7 +28,9 @@ import { Injectable, Logger } from '@nestjs/common';
   pingTimeout: 60000,
   pingInterval: 25000,
 })
-export class NewsWebSocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class NewsWebSocketGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -41,13 +43,17 @@ export class NewsWebSocketGateway implements OnGatewayConnection, OnGatewayDisco
    */
   handleConnection(client: Socket) {
     this.connectedClients.set(client.id, client);
-    this.logger.log(`客户端连接: ${client.id}, 当前连接数: ${this.connectedClients.size}`);
-    
+    this.logger.log(
+      `客户端连接: ${client.id}, 当前连接数: ${this.connectedClients.size}`,
+    );
+
     // 向客户端发送连接成功消息
     client.emit('connected', {
       message: '连接成功',
       clientId: client.id,
-      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000)
+        .toISOString()
+        .replace('Z', '+08:00'),
     });
   }
 
@@ -57,7 +63,9 @@ export class NewsWebSocketGateway implements OnGatewayConnection, OnGatewayDisco
    */
   handleDisconnect(client: Socket) {
     this.connectedClients.delete(client.id);
-    this.logger.log(`客户端断开连接: ${client.id}, 当前连接数: ${this.connectedClients.size}`);
+    this.logger.log(
+      `客户端断开连接: ${client.id}, 当前连接数: ${this.connectedClients.size}`,
+    );
   }
 
   /**
@@ -68,52 +76,172 @@ export class NewsWebSocketGateway implements OnGatewayConnection, OnGatewayDisco
   @SubscribeMessage('message')
   handleMessage(@MessageBody() body: any, @ConnectedSocket() client: Socket) {
     this.logger.log(`收到来自 ${client.id} 的消息:`, body);
-    
+
     // 回显消息给发送者
     client.emit('messageReceived', {
       message: '消息已收到',
       originalMessage: body,
-      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000)
+        .toISOString()
+        .replace('Z', '+08:00'),
     });
-    
+
     return body;
   }
 
   /**
-   * 处理新闻推送订阅
-   * @param body 订阅信息
+   * 处理房间订阅（统一订阅接口）
+   * @param body 订阅信息，包含 roomType 字段
    * @param client 客户端Socket
    */
-  @SubscribeMessage('subscribeNews')
-  handleNewsSubscription(@MessageBody() body: any, @ConnectedSocket() client: Socket) {
-    this.logger.log(`客户端 ${client.id} 订阅新闻:`, body);
-    
-    // 将客户端加入新闻频道
-    client.join('news');
-    
+  @SubscribeMessage('subscribe')
+  handleRoomSubscription(
+    @MessageBody() body: { roomType: string; [key: string]: any },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const { roomType, ...subscriptionData } = body;
+
+    // 验证房间类型
+    const validRooms = ['news', 'finance'];
+    // 获取房间中文名称
+    const roomNames = {
+      news: '新闻',
+      finance: '财经新闻',
+    };
+    if (!validRooms.includes(roomType)) {
+      client.emit('subscriptionError', {
+        message: `无效的房间类型: ${roomType}，支持的房间类型: ${validRooms.join(', ')}`,
+        timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000)
+          .toISOString()
+          .replace('Z', '+08:00'),
+      });
+      return;
+    }
+
+    this.logger.log(`客户端 ${client.id} 订阅房间 ${roomType}:`);
+
+    // 将客户端加入指定房间
+    client.join(roomType);
+
     client.emit('subscriptionConfirmed', {
-      message: '新闻订阅成功',
-      subscription: body,
-      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
+      message: `${roomNames[roomType]}订阅成功`,
+      roomType,
+      subscription: subscriptionData,
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000)
+        .toISOString()
+        .replace('Z', '+08:00'),
     });
   }
 
   /**
-   * 处理新闻推送取消订阅
+   * 处理房间取消订阅（统一取消订阅接口）
+   * @param body 取消订阅信息，包含 roomType 字段
+   * @param client 客户端Socket
+   */
+  @SubscribeMessage('unsubscribe')
+  handleRoomUnsubscription(
+    @MessageBody() body: { roomType: string; [key: string]: any },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const { roomType, ...unsubscriptionData } = body;
+
+    // 验证房间类型
+    const validRooms = ['news', 'finance'];
+    if (!validRooms.includes(roomType)) {
+      client.emit('unsubscriptionError', {
+        message: `无效的房间类型: ${roomType}，支持的房间类型: ${validRooms.join(', ')}`,
+        timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000)
+          .toISOString()
+          .replace('Z', '+08:00'),
+      });
+      return;
+    }
+
+    this.logger.log(
+      `客户端 ${client.id} 取消订阅房间 ${roomType}:`,
+      unsubscriptionData,
+    );
+
+    // 将客户端从指定房间移除
+    client.leave(roomType);
+
+    // 获取房间中文名称
+    const roomNames = {
+      news: '新闻',
+      finance: '财经数据',
+    };
+
+    client.emit('unsubscriptionConfirmed', {
+      message: `取消${roomNames[roomType]}订阅成功`,
+      roomType,
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000)
+        .toISOString()
+        .replace('Z', '+08:00'),
+    });
+  }
+
+  /**
+   * 处理新闻推送订阅（兼容旧接口）
+   * @param body 订阅信息
+   * @param client 客户端Socket
+   */
+  @SubscribeMessage('subscribeNews')
+  handleNewsSubscription(
+    @MessageBody() body: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.logger.log(`客户端 ${client.id} 使用旧接口订阅新闻:`, body);
+
+    // 调用统一订阅方法
+    this.handleRoomSubscription({ roomType: 'news', ...body }, client);
+  }
+
+  /**
+   * 处理新闻推送取消订阅（兼容旧接口）
    * @param body 取消订阅信息
    * @param client 客户端Socket
    */
   @SubscribeMessage('unsubscribeNews')
-  handleNewsUnsubscription(@MessageBody() body: any, @ConnectedSocket() client: Socket) {
-    this.logger.log(`客户端 ${client.id} 取消订阅新闻:`, body);
-    
-    // 将客户端从新闻频道移除
-    client.leave('news');
-    
-    client.emit('unsubscriptionConfirmed', {
-      message: '取消新闻订阅成功',
-      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
-    });
+  handleNewsUnsubscription(
+    @MessageBody() body: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.logger.log(`客户端 ${client.id} 使用旧接口取消订阅新闻:`, body);
+
+    // 调用统一取消订阅方法
+    this.handleRoomUnsubscription({ roomType: 'news', ...body }, client);
+  }
+
+  /**
+   * 处理财经数据订阅
+   * @param body 订阅信息
+   * @param client 客户端Socket
+   */
+  @SubscribeMessage('subscribeFinance')
+  handleFinanceSubscription(
+    @MessageBody() body: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.logger.log(`客户端 ${client.id} 订阅财经数据:`, body);
+
+    // 调用统一订阅方法
+    this.handleRoomSubscription({ roomType: 'finance', ...body }, client);
+  }
+
+  /**
+   * 处理财经数据取消订阅
+   * @param body 取消订阅信息
+   * @param client 客户端Socket
+   */
+  @SubscribeMessage('unsubscribeFinance')
+  handleFinanceUnsubscription(
+    @MessageBody() body: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.logger.log(`客户端 ${client.id} 取消订阅财经数据:`, body);
+
+    // 调用统一取消订阅方法
+    this.handleRoomUnsubscription({ roomType: 'finance', ...body }, client);
   }
 
   /**

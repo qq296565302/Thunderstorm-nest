@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { HttpService } from '@nestjs/axios';
 import { FinanceRepository } from './finance.repository';
+import { WebSocketService } from '../websocket/websocket.service';
 import { firstValueFrom } from 'rxjs';
 
 /**
@@ -23,10 +24,15 @@ export class StockSyncService {
     'http://47.94.196.217:5500/api/public/stock_info_global_cls';
   private readonly sinaAPIUrl =
     'http://47.94.196.217:5500/api/public/stock_info_global_sina';
+  private readonly webSocketService: WebSocketService;
+
   constructor(
     private readonly httpService: HttpService,
     private readonly financeRepository: FinanceRepository,
-  ) {}
+  ) {
+    // 获取 WebSocket 服务单例实例
+    this.webSocketService = WebSocketService.getInstance();
+  }
 
   /**
    * 同步股票数据
@@ -83,11 +89,21 @@ export class StockSyncService {
 
             if (!exists) {
               // 数据不存在，插入新数据
-              await this.financeRepository.create(formattedStock);
+              const newFinanceData =
+                await this.financeRepository.create(formattedStock);
               successCount++;
               this.logger.debug(
                 `新增${author}财经数据: ${formattedStock.title}`,
               );
+
+              // 通过 WebSocket 向订阅了 finance 的客户端发送新数据
+              try {
+                this.webSocketService.pushFinanceData(newFinanceData);
+              } catch (wsError) {
+                this.logger.warn(
+                  `WebSocket推送财经数据失败: ${wsError.message}`,
+                );
+              }
             }
           }
         } catch (error) {

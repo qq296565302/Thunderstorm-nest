@@ -106,64 +106,6 @@ export class WebSocketController {
   }
 
   /**
-   * 推送新闻
-   * @param body 新闻数据
-   * @returns 操作结果
-   */
-  @Post('news/push')
-  @ApiOperation({ summary: '推送新闻到订阅客户端' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string', description: '新闻标题' },
-        content: { type: 'string', description: '新闻内容' },
-        category: { type: 'string', description: '新闻分类' },
-        source: { type: 'string', description: '新闻来源' },
-      },
-      required: ['title', 'content'],
-    },
-  })
-  @ApiResponse({ status: 200, description: '新闻推送成功' })
-  pushNews(@Body() body: any) {
-    this.webSocketService.pushNews(body);
-    return {
-      success: true,
-      message: '新闻已推送到订阅客户端',
-      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
-    };
-  }
-
-  /**
-   * 推送财经数据
-   * @param body 财经数据
-   * @returns 操作结果
-   */
-  @Post('finance/push')
-  @ApiOperation({ summary: '推送财经数据' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        symbol: { type: 'string', description: '股票代码' },
-        price: { type: 'number', description: '价格' },
-        change: { type: 'number', description: '涨跌幅' },
-        volume: { type: 'number', description: '成交量' },
-      },
-      required: ['symbol', 'price'],
-    },
-  })
-  @ApiResponse({ status: 200, description: '财经数据推送成功' })
-  pushFinanceData(@Body() body: any) {
-    this.webSocketService.pushFinanceData(body);
-    return {
-      success: true,
-      message: '财经数据已推送',
-      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
-    };
-  }
-
-  /**
    * 发送系统通知
    * @param body 通知内容
    * @returns 操作结果

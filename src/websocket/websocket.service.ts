@@ -96,7 +96,6 @@ export class WebSocketService {
       timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
     });
     
-    this.logger.log(`发送消息到房间 ${room}: ${event}`, data);
   }
 
   /**

@@ -102,11 +102,12 @@ export class NewsWebSocketGateway
     const { roomType, ...subscriptionData } = body;
 
     // 验证房间类型
-    const validRooms = ['news', 'finance'];
+    const validRooms = ['news', 'finance', 'sport'];
     // 获取房间中文名称
     const roomNames = {
       news: '新闻',
       finance: '财经新闻',
+      sport: '体育新闻',
     };
     if (!validRooms.includes(roomType)) {
       client.emit('subscriptionError', {
@@ -146,7 +147,7 @@ export class NewsWebSocketGateway
     const { roomType, ...unsubscriptionData } = body;
 
     // 验证房间类型
-    const validRooms = ['news', 'finance'];
+    const validRooms = ['news', 'finance', 'sport'];
     if (!validRooms.includes(roomType)) {
       client.emit('unsubscriptionError', {
         message: `无效的房间类型: ${roomType}，支持的房间类型: ${validRooms.join(', ')}`,
@@ -168,6 +169,7 @@ export class NewsWebSocketGateway
     const roomNames = {
       news: '新闻',
       finance: '财经数据',
+      sport: '体育新闻',
     };
 
     client.emit('unsubscriptionConfirmed', {
@@ -209,6 +211,38 @@ export class NewsWebSocketGateway
 
     // 调用统一取消订阅方法
     this.handleRoomUnsubscription({ roomType: 'finance', ...body }, client);
+  }
+
+  /**
+   * 处理体育新闻订阅
+   * @param body 订阅信息
+   * @param client 客户端Socket
+   */
+  @SubscribeMessage('subscribeSport')
+  handleSportSubscription(
+    @MessageBody() body: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.logger.log(`客户端 ${client.id} 订阅体育新闻:`);
+
+    // 调用统一订阅方法
+    this.handleRoomSubscription({ roomType: 'sport', ...body }, client);
+  }
+
+  /**
+   * 处理体育新闻取消订阅
+   * @param body 取消订阅信息
+   * @param client 客户端Socket
+   */
+  @SubscribeMessage('unsubscribeSport')
+  handleSportUnsubscription(
+    @MessageBody() body: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.logger.log(`客户端 ${client.id} 取消订阅体育新闻:`);
+
+    // 调用统一取消订阅方法
+    this.handleRoomUnsubscription({ roomType: 'sport', ...body }, client);
   }
 
   /**

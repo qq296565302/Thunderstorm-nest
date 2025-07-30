@@ -158,6 +158,18 @@ export class WebSocketService {
   }
 
   /**
+   * 发送体育新闻推送
+   * @param sportData 体育新闻数据
+   */
+  pushSportData(sportData: any): void {
+    this.sendToRoom('sport', 'sportPush', {
+      type: 'sport',
+      content: sportData,
+      message: '体育新闻推送',
+    });
+  }
+
+  /**
    * 发送系统通知
    * @param notification 通知内容
    * @param targetRoom 目标房间（可选，不指定则广播给所有客户端）

@@ -22,6 +22,7 @@ async function bootstrap() {
     .setDescription('雷雨资讯的后端API接口文档')
     .setVersion('1.0')
     .addTag('finance', '财经相关接口')
+    .addTag('sport', '体育新闻相关接口')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

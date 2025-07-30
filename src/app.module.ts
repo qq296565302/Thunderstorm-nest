@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FinanceModule } from './finance/finance.module';
+import { SportModule } from './sport/sport.module';
 import { WebSocketModule } from './websocket';
 import { DatabaseModule } from './database';
 
@@ -21,6 +22,7 @@ import { DatabaseModule } from './database';
     DatabaseModule,
     // 业务模块
     FinanceModule,
+    SportModule,
     WebSocketModule,
   ],
   controllers: [AppController],

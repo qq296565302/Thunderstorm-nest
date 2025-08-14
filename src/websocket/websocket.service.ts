@@ -235,4 +235,30 @@ export class WebSocketService {
       serverTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00')
     });
   }
+
+  /**
+   * 发送连接恢复提示给指定客户端
+   * @param clientId 客户端ID
+   * @param recoveredData 恢复的数据信息
+   */
+  notifyConnectionRecovered(clientId: string, recoveredData?: any): void {
+    this.sendToClient(clientId, 'connectionRecovered', {
+      message: '连接已恢复',
+      recoveredData,
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00')
+    });
+  }
+
+  /**
+   * 向客户端发送重连建议
+   * @param clientId 客户端ID
+   * @param reason 重连原因
+   */
+  suggestReconnection(clientId: string, reason: string): void {
+    this.sendToClient(clientId, 'reconnectSuggestion', {
+      message: '建议重新连接',
+      reason,
+      timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00')
+    });
+  }
 }

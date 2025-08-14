@@ -25,8 +25,17 @@ import { Injectable, Logger } from '@nestjs/common';
   namespace: '/',
   transports: ['websocket', 'polling'],
   allowEIO3: true,
-  pingTimeout: 60000,
-  pingInterval: 25000,
+  // 针对移动端优化：增加心跳超时时间以适应后台切换和网络延迟
+  pingTimeout: 180000, // 3分钟，适应安卓后台限制
+  pingInterval: 25000,  // 25秒发送一次心跳
+  // 启用连接状态恢复，减少短暂断线的影响
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 300000, // 5分钟内可恢复
+    skipMiddlewares: true,
+  },
+  // 优化传输配置
+  upgradeTimeout: 30000,
+  maxHttpBufferSize: 1e6,
 })
 export class NewsWebSocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -47,13 +56,37 @@ export class NewsWebSocketGateway
       `客户端连接: ${client.id}, 当前连接数: ${this.connectedClients.size}`,
     );
 
+    // 检查是否为恢复的连接
+    const isRecovered = client.recovered;
+    
     // 向客户端发送连接成功消息
     client.emit('connected', {
-      message: '连接成功',
+      message: isRecovered ? '连接已恢复' : '连接成功',
       clientId: client.id,
+      isRecovered,
       timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000)
         .toISOString()
         .replace('Z', '+08:00'),
+    });
+
+    // 如果是恢复的连接，记录日志
+    if (isRecovered) {
+      this.logger.log(`客户端 ${client.id} 连接已恢复`);
+    }
+
+    // 监听客户端的应用状态变化（用于移动端优化）
+    client.on('appStateChange', (state: 'active' | 'background' | 'inactive') => {
+      this.logger.log(`客户端 ${client.id} 应用状态变化: ${state}`);
+      
+      if (state === 'active') {
+        // 应用回到前台时，发送状态同步消息
+        client.emit('appResumed', {
+          message: '应用已恢复前台',
+          timestamp: new Date(Date.now() + 8 * 60 * 60 * 1000)
+            .toISOString()
+            .replace('Z', '+08:00'),
+        });
+      }
     });
   }
 

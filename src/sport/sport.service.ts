@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SportRepository } from './sport.repository';
 import { WebSocketService } from '../websocket/websocket.service';
-import { Person } from '../database/schemas/team.schema';
+import { Person } from '../database/schemas/league.schema';
 
 /**
  * 体育新闻服务层

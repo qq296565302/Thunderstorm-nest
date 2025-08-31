@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 /**
  * 球队数据文档类型
  */
-export type TeamDocument = Team & Document;
+export type LeagueDocument = League & Document;
 
 /**
  * 球员信息接口
@@ -26,9 +26,9 @@ export interface Person {
  */
 @Schema({
   timestamps: true, // 自动添加createdAt和updatedAt字段
-  collection: 'teams'
+  collection: 'league'
 })
-export class Team {
+export class League {
   /**
    * 球队唯一标识符
    */
@@ -50,14 +50,14 @@ export class Team {
 }
 
 /**
- * 球队数据Schema
+ * 联赛数据Schema
  */
-export const TeamSchema = SchemaFactory.createForClass(Team);
+export const LeagueSchema = SchemaFactory.createForClass(League);
 
 // 创建索引
-TeamSchema.index({ team_id: 1 }, { unique: true }); // 球队ID唯一索引
-TeamSchema.index({ league: 1 }); // 联赛索引
-TeamSchema.index({ name: 1 }); // 球队名称索引
-TeamSchema.index({ city: 1 }); // 城市索引
-TeamSchema.index({ isActive: 1 }); // 活跃状态索引
-TeamSchema.index({ updateTime: -1 }); // 更新时间索引
+LeagueSchema.index({ team_id: 1 }, { unique: true }); // 球队ID唯一索引
+LeagueSchema.index({ league: 1 }); // 联赛索引
+LeagueSchema.index({ name: 1 }); // 球队名称索引
+LeagueSchema.index({ city: 1 }); // 城市索引
+LeagueSchema.index({ isActive: 1 }); // 活跃状态索引
+LeagueSchema.index({ updateTime: -1 }); // 更新时间索引

@@ -4,7 +4,7 @@ import { SportController } from './sport.controller';
 import { SportService } from './sport.service';
 import { SportRepository } from './sport.repository';
 import { Sport, SportSchema } from '../database/schemas/sport.schema';
-import { Team, TeamSchema } from '../database/schemas/team.schema';
+import { League, LeagueSchema } from '../database/schemas/league.schema';   
 import { WebSocketService } from '../websocket/websocket.service';
 
 /**
@@ -15,7 +15,7 @@ import { WebSocketService } from '../websocket/websocket.service';
     // 注册体育新闻和球队数据模型
     MongooseModule.forFeature([
       { name: Sport.name, schema: SportSchema },
-      { name: Team.name, schema: TeamSchema },
+      { name: League.name, schema: LeagueSchema },
     ]),
   ],
   controllers: [SportController],

@@ -14,6 +14,17 @@ export class SportService {
   ) {}
 
   /**
+   * 根据联赛名称获取联赛积分榜
+   * @param leagueName 联赛名称
+   * @returns 联赛积分榜
+   */
+  async getLeagueStandings(leagueName: string) {
+    const standings = await this.sportRepository.getLeagueStandings(leagueName);
+    return standings;
+  }
+
+
+  /**
    * 根据球队ID获取球员列表
    * @param teamId 球队ID
    * @returns 球员列表，包含position、jersey_number、name、appearances、goals、nationality_flag、person_id、detailed_type、avatar_url等字段

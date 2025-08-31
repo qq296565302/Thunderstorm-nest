@@ -36,34 +36,10 @@ export class Team {
   team_id: string;
 
   /**
-   * 球队名称
+   * 联赛名称
    */
   @Prop({ required: true, trim: true })
-  name: string;
-
-  /**
-   * 球队简称
-   */
-  @Prop({ trim: true })
-  shortName?: string;
-
-  /**
-   * 球队所在城市
-   */
-  @Prop({ trim: true })
-  city?: string;
-
-  /**
-   * 球队成立年份
-   */
-  @Prop()
-  foundedYear?: number;
-
-  /**
-   * 球队logo URL
-   */
-  @Prop({ trim: true })
-  logoUrl?: string;
+  league: string;
 
   /**
    * 球员列表
@@ -71,23 +47,6 @@ export class Team {
   @Prop({ type: [Object], default: [] })
   person: Person[];
 
-  /**
-   * 球队描述
-   */
-  @Prop({ trim: true })
-  description?: string;
-
-  /**
-   * 是否为活跃球队
-   */
-  @Prop({ default: true })
-  isActive?: boolean;
-
-  /**
-   * 数据更新时间
-   */
-  @Prop({ type: Date, default: Date.now })
-  updateTime: Date;
 }
 
 /**
@@ -97,6 +56,7 @@ export const TeamSchema = SchemaFactory.createForClass(Team);
 
 // 创建索引
 TeamSchema.index({ team_id: 1 }, { unique: true }); // 球队ID唯一索引
+TeamSchema.index({ league: 1 }); // 联赛索引
 TeamSchema.index({ name: 1 }); // 球队名称索引
 TeamSchema.index({ city: 1 }); // 城市索引
 TeamSchema.index({ isActive: 1 }); // 活跃状态索引

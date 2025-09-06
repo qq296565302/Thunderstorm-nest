@@ -92,9 +92,6 @@ export class StockSyncService {
               const newFinanceData =
                 await this.financeRepository.create(formattedStock);
               successCount++;
-              this.logger.debug(
-                `新增${author}财经数据: ${formattedStock.title}`,
-              );
 
               // 通过 WebSocket 向订阅了 finance 的客户端发送新数据
               try {
